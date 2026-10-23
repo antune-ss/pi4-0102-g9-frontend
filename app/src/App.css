@@ -1,0 +1,130 @@
+
+/* Estrutura principal do dashboard */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* Cabeçalho */
+header {
+  background-color: #ffffff;
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  border: 1px solid #e2e8f0;
+}
+
+header h1 {
+  color: #047857;
+  font-size: 32px;
+  margin: 0 0 8px;
+}
+
+header p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* Título da seção */
+section h2 {
+  color: #0f172a;
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+section > p {
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+/* Organização dos indicadores */
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 28px;
+}
+
+/* Cartões */
+.indicador-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.indicador-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.indicador-card h3 {
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 20px;
+}
+
+.indicador-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 18px;
+}
+
+.indicador-card strong {
+  color: #0f172a;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 768px) {
+  .indicadores {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 20px 16px;
+  }
+
+  .indicador-card {
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicador-card {
+    transition: none;
+  }
+
+  .indicador-card:hover {
+    transform: none;
+  }
+}
+
+
+/* Botão para simular novas medições */
+.botao-simular {
+  margin-top: 28px;
+  padding: 14px 24px;
+  background-color: #047857;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.botao-simular:hover {
+  background-color: #065f46;
+}
+
+.botao-simular:focus-visible {
+  outline: 3px solid #10b981;
+  outline-offset: 3px;
+}
