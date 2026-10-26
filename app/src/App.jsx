@@ -1,4 +1,5 @@
-
+import RelatorioMedicoes from './components/RelatorioMedicoes'
+import HistoricoMedicoes from './components/HistoricoMedicoes'
 import { useEffect, useState } from 'react'
 import IndicadorCard from './components/IndicadorCard'
 import { medicoesSimuladas } from './mocks/medicoesMock'
@@ -146,8 +147,12 @@ function App() {
           Simular nova medição
         </button>
       </section>
+
+      <HistoricoMedicoes />
+      <RelatorioMedicoes />
     </main>
   )
 }
+
 
 export default App
