@@ -1,0 +1,442 @@
+
+/* Estrutura principal do dashboard */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* Cabeçalho */
+header {
+  background-color: #ffffff;
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  border: 1px solid #e2e8f0;
+}
+
+header h1 {
+  color: #047857;
+  font-size: 32px;
+  margin: 0 0 8px;
+}
+
+header p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* Título da seção */
+section h2 {
+  color: #0f172a;
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+section > p {
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+/* Organização dos indicadores */
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 28px;
+}
+
+/* Cartões */
+.indicador-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.indicador-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.indicador-card h3 {
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 20px;
+}
+
+.indicador-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 18px;
+}
+
+.indicador-card strong {
+  color: #0f172a;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 768px) {
+  .indicadores {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 20px 16px;
+  }
+
+  .indicador-card {
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicador-card {
+    transition: none;
+  }
+
+  .indicador-card:hover {
+    transform: none;
+  }
+}
+
+
+/* Botão para simular novas medições */
+.botao-simular {
+  margin-top: 28px;
+  padding: 14px 24px;
+  background-color: #047857;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.botao-simular:hover {
+  background-color: #065f46;
+}
+
+.botao-simular:focus-visible {
+  outline: 3px solid #10b981;
+  outline-offset: 3px;
+}
+
+
+/* Área de configuração dos indicadores */
+.controles-indicadores {
+  margin: 28px 0 24px;
+  padding: 22px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.controles-indicadores h3 {
+  margin: 0 0 16px;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+/* Opções para mostrar e ocultar os cartões */
+.opcoes-indicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.opcoes-indicadores label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  color: #334155;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.opcoes-indicadores label:hover {
+  background-color: #f0fdfa;
+  border-color: #0f766e;
+}
+
+.opcoes-indicadores input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+  cursor: pointer;
+}
+
+/* Mensagem exibida quando todos os indicadores estão ocultos */
+.mensagem-sem-indicadores {
+  margin: 20px 0;
+  padding: 24px;
+  color: #475569;
+  text-align: center;
+  line-height: 1.6;
+  background-color: #f8fafc;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+}
+
+/* Botão para simular novas medições */
+.botao-simular {
+  margin-top: 24px;
+  padding: 12px 20px;
+  color: #ffffff;
+  background-color: #0f766e;
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.botao-simular:hover {
+  background-color: #115e59;
+  transform: translateY(-1px);
+}
+
+.botao-simular:focus-visible,
+.opcoes-indicadores input:focus-visible {
+  outline: 3px solid #99f6e4;
+  outline-offset: 3px;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 600px) {
+  .controles-indicadores {
+    padding: 16px;
+  }
+
+  .opcoes-indicadores {
+    flex-direction: column;
+  }
+
+  .opcoes-indicadores label {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .botao-simular {
+    width: 100%;
+  }
+}
+
+
+/* Histórico de medições */
+.historico-section {
+  margin-top: 32px;
+  padding: 24px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.historico-cabecalho {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.historico-cabecalho h2 {
+  margin: 0 0 8px;
+  color: #1e293b;
+}
+
+.historico-cabecalho p {
+  margin: 0;
+  color: #64748b;
+}
+
+.seletor-periodo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.seletor-periodo select {
+  padding: 10px 12px;
+  color: #0f172a;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.tabela-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.tabela-medicoes {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tabela-medicoes th,
+.tabela-medicoes td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.tabela-medicoes th {
+  color: #475569;
+  background-color: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tabela-medicoes td {
+  color: #334155;
+}
+
+.tabela-medicoes tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabela-medicoes tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.historico-vazio {
+  padding: 24px;
+  color: #64748b;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 10px;
+}
+
+.nota-dados {
+  margin: 14px 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .historico-section {
+    padding: 16px;
+  }
+
+  .historico-cabecalho {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .seletor-periodo select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+
+/* Relatório de medições */
+.relatorio-section {
+  margin-top: 32px;
+  padding: 24px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.relatorio-cabecalho {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.relatorio-cabecalho h2 {
+  margin: 0 0 8px;
+  color: #1e293b;
+}
+
+.relatorio-cabecalho p {
+  margin: 0;
+  color: #64748b;
+}
+
+.relatorio-resumo {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.relatorio-card {
+  padding: 20px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.relatorio-card h3 {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.relatorio-card p {
+  margin: 0;
+  color: #64748b;
+}
+
+.relatorio-card strong {
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.relatorio-vazio {
+  margin-top: 20px;
+  padding: 20px;
+  color: #64748b;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 10px;
+}
+
+@media (max-width: 900px) {
+  .relatorio-resumo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .relatorio-section {
+    padding: 16px;
+  }
+
+  .relatorio-cabecalho {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .relatorio-resumo {
+    grid-template-columns: 1fr;
+  }
+}
