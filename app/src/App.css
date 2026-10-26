@@ -128,3 +128,112 @@ section > p {
   outline: 3px solid #10b981;
   outline-offset: 3px;
 }
+
+
+/* Área de configuração dos indicadores */
+.controles-indicadores {
+  margin: 28px 0 24px;
+  padding: 22px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.controles-indicadores h3 {
+  margin: 0 0 16px;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+/* Opções para mostrar e ocultar os cartões */
+.opcoes-indicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.opcoes-indicadores label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  color: #334155;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.opcoes-indicadores label:hover {
+  background-color: #f0fdfa;
+  border-color: #0f766e;
+}
+
+.opcoes-indicadores input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+  cursor: pointer;
+}
+
+/* Mensagem exibida quando todos os indicadores estão ocultos */
+.mensagem-sem-indicadores {
+  margin: 20px 0;
+  padding: 24px;
+  color: #475569;
+  text-align: center;
+  line-height: 1.6;
+  background-color: #f8fafc;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+}
+
+/* Botão para simular novas medições */
+.botao-simular {
+  margin-top: 24px;
+  padding: 12px 20px;
+  color: #ffffff;
+  background-color: #0f766e;
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.botao-simular:hover {
+  background-color: #115e59;
+  transform: translateY(-1px);
+}
+
+.botao-simular:focus-visible,
+.opcoes-indicadores input:focus-visible {
+  outline: 3px solid #99f6e4;
+  outline-offset: 3px;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 600px) {
+  .controles-indicadores {
+    padding: 16px;
+  }
+
+  .opcoes-indicadores {
+    flex-direction: column;
+  }
+
+  .opcoes-indicadores label {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .botao-simular {
+    width: 100%;
+  }
+}
