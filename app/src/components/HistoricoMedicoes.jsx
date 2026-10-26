@@ -1,23 +1,34 @@
-
 import { useState } from 'react'
-import { historicoMock } from '../mocks/historicoMock'
 
-function HistoricoMedicoes() {
+const INSTANTE_INICIAL = Date.now()
+
+function HistoricoMedicoes({ medicoes = [] }) {
   const [intervalo, setIntervalo] = useState('24h')
+  const [agora, setAgora] = useState(INSTANTE_INICIAL)
 
   const duracoes = {
+    '30min': 30 * 60 * 1000,
     '6h': 6 * 60 * 60 * 1000,
     '24h': 24 * 60 * 60 * 1000,
     '7d': 7 * 24 * 60 * 60 * 1000,
     '30d': 30 * 24 * 60 * 60 * 1000,
   }
 
-  const limite = Date.now() - duracoes[intervalo]
+  const limite = agora - duracoes[intervalo]
 
-  const medicoesFiltradas = historicoMock
-    .filter((medicao) => new Date(medicao.data).getTime() >= limite)
+  const medicoesFiltradas = medicoes
+    .filter((medicao) => {
+      const instante = new Date(medicao.data).getTime()
+
+      return (
+        Number.isFinite(instante) &&
+        instante >= limite
+      )
+    })
     .sort(
-      (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
+      (a, b) =>
+        new Date(b.data).getTime() -
+        new Date(a.data).getTime()
     )
 
   function formatarData(data) {
@@ -25,6 +36,11 @@ function HistoricoMedicoes() {
       dateStyle: 'short',
       timeStyle: 'short',
     }).format(new Date(data))
+  }
+
+  function alterarIntervalo(event) {
+    setIntervalo(event.target.value)
+    setAgora(Date.now())
   }
 
   return (
@@ -37,10 +53,12 @@ function HistoricoMedicoes() {
 
         <label className="seletor-periodo">
           Período
+
           <select
             value={intervalo}
-            onChange={(event) => setIntervalo(event.target.value)}
+            onChange={alterarIntervalo}
           >
+            <option value="30min">Últimos 30 minutos</option>
             <option value="6h">Últimas 6 horas</option>
             <option value="24h">Últimas 24 horas</option>
             <option value="7d">Últimos 7 dias</option>
@@ -65,13 +83,21 @@ function HistoricoMedicoes() {
               {medicoesFiltradas.map((medicao) => (
                 <tr key={medicao.id}>
                   <td>{formatarData(medicao.data)}</td>
-                  <td>{medicao.co2.toLocaleString('pt-BR')}</td>
+
                   <td>
-                    {medicao.temperature.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 1,
-                      maximumFractionDigits: 1,
-                    })}
+                    {medicao.co2.toLocaleString('pt-BR')}
                   </td>
+
+                  <td>
+                    {medicao.temperature.toLocaleString(
+                      'pt-BR',
+                      {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      }
+                    )}
+                  </td>
+
                   <td>{medicao.humidity}%</td>
                 </tr>
               ))}
@@ -79,14 +105,17 @@ function HistoricoMedicoes() {
           </table>
         </div>
       ) : (
-        <p className="historico-vazio">
+        <p className="historico-vazio" aria-live="polite">
           Nenhuma medição encontrada no período selecionado.
         </p>
       )}
 
       <p className="nota-dados">
-        Demonstração com dados simulados. A integração com o backend
-        será realizada posteriormente.
+        {medicoesFiltradas.length}{' '}
+        {medicoesFiltradas.length === 1
+          ? 'medição encontrada'
+          : 'medições encontradas'}{' '}
+        no período. Dados simulados para demonstração.
       </p>
     </section>
   )

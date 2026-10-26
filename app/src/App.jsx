@@ -1,7 +1,8 @@
-import RelatorioMedicoes from './components/RelatorioMedicoes'
-import HistoricoMedicoes from './components/HistoricoMedicoes'
 import { useEffect, useState } from 'react'
+import HistoricoMedicoes from './components/HistoricoMedicoes'
 import IndicadorCard from './components/IndicadorCard'
+import RelatorioMedicoes from './components/RelatorioMedicoes'
+import { historicoMock } from './mocks/historicoMock'
 import { medicoesSimuladas } from './mocks/medicoesMock'
 import './App.css'
 
@@ -17,37 +18,84 @@ function carregarPreferencias() {
   try {
     const preferenciasSalvas = localStorage.getItem(CHAVE_PREFERENCIAS)
 
-    if (preferenciasSalvas) {
-      return {
-        ...PREFERENCIAS_PADRAO,
-        ...JSON.parse(preferenciasSalvas),
-      }
+    if (!preferenciasSalvas) {
+      return { ...PREFERENCIAS_PADRAO }
+    }
+
+    const preferenciasLidas = JSON.parse(preferenciasSalvas)
+
+    return {
+      co2:
+        typeof preferenciasLidas?.co2 === 'boolean'
+          ? preferenciasLidas.co2
+          : PREFERENCIAS_PADRAO.co2,
+
+      temperature:
+        typeof preferenciasLidas?.temperature === 'boolean'
+          ? preferenciasLidas.temperature
+          : PREFERENCIAS_PADRAO.temperature,
+
+      humidity:
+        typeof preferenciasLidas?.humidity === 'boolean'
+          ? preferenciasLidas.humidity
+          : PREFERENCIAS_PADRAO.humidity,
     }
   } catch {
-    // Se as preferencias nao puderem ser lidas, usamos os valores padrao.
+    return { ...PREFERENCIAS_PADRAO }
   }
-
-  return PREFERENCIAS_PADRAO
 }
 
 function App() {
-  const [indiceMedicao, setIndiceMedicao] = useState(0)
+  // Começa com os registros disponíveis no histórico simulado.
+  const [medicoes, setMedicoes] = useState(() => [...historicoMock])
 
+  // A próxima medição simulada será usada quando o botão for clicado.
+  const [indiceProximaMedicao, setIndiceProximaMedicao] = useState(1)
+
+  // Recupera as preferências de exibição salvas no navegador.
   const [indicadoresVisiveis, setIndicadoresVisiveis] =
     useState(carregarPreferencias)
 
-  const medicaoAtual = medicoesSimuladas[indiceMedicao]
+  // A primeira medição da lista é sempre a mais recente.
+  const medicaoAtual = medicoes[0]
 
+  const algumIndicadorVisivel =
+    Object.values(indicadoresVisiveis).some(Boolean)
+
+  // Salva as preferências sempre que o usuário altera um indicador.
   useEffect(() => {
-    localStorage.setItem(
-      CHAVE_PREFERENCIAS,
-      JSON.stringify(indicadoresVisiveis)
-    )
+    try {
+      localStorage.setItem(
+        CHAVE_PREFERENCIAS,
+        JSON.stringify(indicadoresVisiveis)
+      )
+    } catch {
+      // O dashboard continua funcionando se o navegador bloquear o armazenamento.
+    }
   }, [indicadoresVisiveis])
 
   function simularNovaMedicao() {
-    setIndiceMedicao((indiceAnterior) =>
-      (indiceAnterior + 1) % medicoesSimuladas.length
+    const dadosSimulados =
+      medicoesSimuladas[indiceProximaMedicao]
+
+    const agora = new Date()
+
+    const novaMedicao = {
+      ...dadosSimulados,
+      id: `simulada-${agora.getTime()}`,
+      data: agora.toISOString(),
+    }
+
+    // Adiciona a nova medição sem apagar os registros anteriores.
+    setMedicoes((anteriores) => [
+      novaMedicao,
+      ...anteriores,
+    ])
+
+    // Avança para o próximo conjunto de valores simulados.
+    setIndiceProximaMedicao(
+      (indiceAnterior) =>
+        (indiceAnterior + 1) % medicoesSimuladas.length
     )
   }
 
@@ -58,8 +106,12 @@ function App() {
     }))
   }
 
-  const algumIndicadorVisivel =
-    Object.values(indicadoresVisiveis).some(Boolean)
+  function formatarUltimaAtualizacao(data) {
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(data))
+  }
 
   return (
     <main>
@@ -70,8 +122,19 @@ function App() {
 
       <section>
         <h2>Dashboard</h2>
+
         <p>Monitoramento das condições ambientais</p>
-        <p>Modo de demonstração — dados simulados</p>
+
+        <p>
+          Modo de demonstração com dados simulados.
+        </p>
+
+        {medicaoAtual && (
+          <p className="atualizacao-medicao">
+            Última leitura simulada:{' '}
+            {formatarUltimaAtualizacao(medicaoAtual.data)}
+          </p>
+        )}
 
         <div className="controles-indicadores">
           <h3>Indicadores exibidos</h3>
@@ -106,8 +169,12 @@ function App() {
           </div>
         </div>
 
-        {algumIndicadorVisivel ? (
-          <div className="indicadores">
+        {!medicaoAtual ? (
+          <p className="mensagem-sem-indicadores">
+            Ainda não há medições para exibir.
+          </p>
+        ) : algumIndicadorVisivel ? (
+          <div className="indicadores" aria-live="polite">
             {indicadoresVisiveis.co2 && (
               <IndicadorCard
                 titulo="CO₂"
@@ -134,8 +201,8 @@ function App() {
           </div>
         ) : (
           <p className="mensagem-sem-indicadores">
-            Todos os indicadores estão ocultos. Selecione ao menos um para
-            exibi-lo no dashboard.
+            Todos os indicadores estão ocultos. Selecione ao menos
+            um para exibi-lo no dashboard.
           </p>
         )}
 
@@ -148,11 +215,11 @@ function App() {
         </button>
       </section>
 
-      <HistoricoMedicoes />
-      <RelatorioMedicoes />
+      <HistoricoMedicoes medicoes={medicoes} />
+
+      <RelatorioMedicoes medicoes={medicoes} />
     </main>
   )
 }
-
 
 export default App

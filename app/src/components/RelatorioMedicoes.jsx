@@ -1,22 +1,29 @@
-
 import { useState } from 'react'
-import { historicoMock } from '../mocks/historicoMock'
 
-function RelatorioMedicoes() {
+const INSTANTE_INICIAL = Date.now()
+
+function RelatorioMedicoes({ medicoes = [] }) {
   const [intervalo, setIntervalo] = useState('24h')
+  const [agora, setAgora] = useState(INSTANTE_INICIAL)
 
   const duracoes = {
+    '30min': 30 * 60 * 1000,
     '6h': 6 * 60 * 60 * 1000,
     '24h': 24 * 60 * 60 * 1000,
     '7d': 7 * 24 * 60 * 60 * 1000,
     '30d': 30 * 24 * 60 * 60 * 1000,
   }
 
-  const limite = Date.now() - duracoes[intervalo]
+  const limite = agora - duracoes[intervalo]
 
-  const medicoesFiltradas = historicoMock.filter(
-    (medicao) => new Date(medicao.data).getTime() >= limite
-  )
+  const medicoesFiltradas = medicoes.filter((medicao) => {
+    const instante = new Date(medicao.data).getTime()
+
+    return (
+      Number.isFinite(instante) &&
+      instante >= limite
+    )
+  })
 
   const quantidade = medicoesFiltradas.length
 
@@ -26,7 +33,7 @@ function RelatorioMedicoes() {
     }
 
     const soma = medicoesFiltradas.reduce(
-      (total, medicao) => total + medicao[campo],
+      (total, medicao) => total + Number(medicao[campo]),
       0
     )
 
@@ -48,6 +55,11 @@ function RelatorioMedicoes() {
     })
   }
 
+  function alterarIntervalo(event) {
+    setIntervalo(event.target.value)
+    setAgora(Date.now())
+  }
+
   return (
     <section className="relatorio-section">
       <div className="relatorio-cabecalho">
@@ -58,10 +70,12 @@ function RelatorioMedicoes() {
 
         <label className="seletor-periodo">
           Período
+
           <select
             value={intervalo}
-            onChange={(event) => setIntervalo(event.target.value)}
+            onChange={alterarIntervalo}
           >
+            <option value="30min">Últimos 30 minutos</option>
             <option value="6h">Últimas 6 horas</option>
             <option value="24h">Últimas 24 horas</option>
             <option value="7d">Últimos 7 dias</option>
@@ -101,13 +115,17 @@ function RelatorioMedicoes() {
       </div>
 
       {quantidade === 0 && (
-        <p className="relatorio-vazio">
+        <p className="relatorio-vazio" aria-live="polite">
           Nenhuma medição encontrada no período selecionado.
         </p>
       )}
 
       <p className="nota-dados">
-        Relatório demonstrativo com dados simulados.
+        {quantidade}{' '}
+        {quantidade === 1
+          ? 'medição considerada'
+          : 'medições consideradas'}{' '}
+        no relatório. Dados simulados para demonstração.
       </p>
     </section>
   )
