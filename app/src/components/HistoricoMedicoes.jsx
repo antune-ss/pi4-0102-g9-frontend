@@ -1,29 +1,63 @@
 import { useState } from 'react'
 
-const INSTANTE_INICIAL = Date.now()
+function inicioDoDia(data) {
+  const [ano, mes, dia] = data.split('-').map(Number)
+  return new Date(ano, mes - 1, dia).getTime()
+}
+
+function inicioDoDiaSeguinte(data) {
+  const [ano, mes, dia] = data.split('-').map(Number)
+  return new Date(ano, mes - 1, dia + 1).getTime()
+}
 
 function HistoricoMedicoes({ medicoes = [] }) {
-  const [intervalo, setIntervalo] = useState('24h')
-  const [agora, setAgora] = useState(INSTANTE_INICIAL)
+  const [dataDe, setDataDe] = useState('')
+  const [dataAte, setDataAte] = useState('')
+  const [periodoAplicado, setPeriodoAplicado] = useState(null)
+  const [erroFiltro, setErroFiltro] = useState('')
 
-  const duracoes = {
-    '30min': 30 * 60 * 1000,
-    '6h': 6 * 60 * 60 * 1000,
-    '24h': 24 * 60 * 60 * 1000,
-    '7d': 7 * 24 * 60 * 60 * 1000,
-    '30d': 30 * 24 * 60 * 60 * 1000,
+  function pesquisarMedicoes(event) {
+    event.preventDefault()
+
+    if (!dataDe || !dataAte) {
+      setErroFiltro('Preencha a data inicial e a data final.')
+      return
+    }
+
+    if (dataDe > dataAte) {
+      setErroFiltro(
+        'A data inicial não pode ser posterior à data final.'
+      )
+      return
+    }
+
+    setErroFiltro('')
+    setPeriodoAplicado({ dataDe, dataAte })
   }
 
-  const limite = agora - duracoes[intervalo]
+  function limparFiltros() {
+    setDataDe('')
+    setDataAte('')
+    setPeriodoAplicado(null)
+    setErroFiltro('')
+  }
 
   const medicoesFiltradas = medicoes
     .filter((medicao) => {
       const instante = new Date(medicao.data).getTime()
 
-      return (
-        Number.isFinite(instante) &&
-        instante >= limite
-      )
+      if (!Number.isFinite(instante)) {
+        return false
+      }
+
+      if (!periodoAplicado) {
+        return true
+      }
+
+      const inicio = inicioDoDia(periodoAplicado.dataDe)
+      const fim = inicioDoDiaSeguinte(periodoAplicado.dataAte)
+
+      return instante >= inicio && instante < fim
     })
     .sort(
       (a, b) =>
@@ -32,15 +66,16 @@ function HistoricoMedicoes({ medicoes = [] }) {
     )
 
   function formatarData(data) {
+    const instante = new Date(data)
+
+    if (Number.isNaN(instante.getTime())) {
+      return 'Data inválida'
+    }
+
     return new Intl.DateTimeFormat('pt-BR', {
       dateStyle: 'short',
       timeStyle: 'short',
-    }).format(new Date(data))
-  }
-
-  function alterarIntervalo(event) {
-    setIntervalo(event.target.value)
-    setAgora(Date.now())
+    }).format(instante)
   }
 
   return (
@@ -48,24 +83,65 @@ function HistoricoMedicoes({ medicoes = [] }) {
       <div className="historico-cabecalho">
         <div>
           <h2>Histórico de medições</h2>
-          <p>Consulte as leituras registradas por período.</p>
+          <p>
+            Consulte as leituras registradas em um período.
+          </p>
         </div>
-
-        <label className="seletor-periodo">
-          Período
-
-          <select
-            value={intervalo}
-            onChange={alterarIntervalo}
-          >
-            <option value="30min">Últimos 30 minutos</option>
-            <option value="6h">Últimas 6 horas</option>
-            <option value="24h">Últimas 24 horas</option>
-            <option value="7d">Últimos 7 dias</option>
-            <option value="30d">Últimos 30 dias</option>
-          </select>
-        </label>
       </div>
+
+      <form
+        className="filtros-data"
+        onSubmit={pesquisarMedicoes}
+      >
+        <label className="campo-data">
+          Data de
+          <input
+            type="date"
+            value={dataDe}
+            onChange={(event) => {
+              setDataDe(event.target.value)
+              setErroFiltro('')
+            }}
+            max={dataAte || undefined}
+          />
+        </label>
+
+        <label className="campo-data">
+          Data até
+          <input
+            type="date"
+            value={dataAte}
+            onChange={(event) => {
+              setDataAte(event.target.value)
+              setErroFiltro('')
+            }}
+            min={dataDe || undefined}
+          />
+        </label>
+
+        <div className="acoes-filtro">
+          <button
+            type="submit"
+            className="botao-pesquisar"
+          >
+            Pesquisar
+          </button>
+
+          <button
+            type="button"
+            className="botao-limpar"
+            onClick={limparFiltros}
+          >
+            Limpar filtros
+          </button>
+        </div>
+      </form>
+
+      {erroFiltro && (
+        <p className="aviso-erro-consulta" role="alert">
+          {erroFiltro}
+        </p>
+      )}
 
       {medicoesFiltradas.length > 0 ? (
         <div className="tabela-wrapper">
@@ -83,11 +159,9 @@ function HistoricoMedicoes({ medicoes = [] }) {
               {medicoesFiltradas.map((medicao) => (
                 <tr key={medicao.id}>
                   <td>{formatarData(medicao.data)}</td>
-
                   <td>
                     {medicao.co2.toLocaleString('pt-BR')}
                   </td>
-
                   <td>
                     {medicao.temperature.toLocaleString(
                       'pt-BR',
@@ -97,7 +171,6 @@ function HistoricoMedicoes({ medicoes = [] }) {
                       }
                     )}
                   </td>
-
                   <td>{medicao.humidity}%</td>
                 </tr>
               ))}
