@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { Logo } from "@/components/Logo"
 import { IndicatorCard } from "@/components/IndicatorCard"
+import { ChartsContainer } from "@/components/dashboard/ChartsContainer"
 import { ReadingsHistory } from "@/components/ReadingsHistory"
 import { ReadingsReport } from "@/components/ReadingsReport"
 import { historyMock, simulatedReadings } from "@/lib/mocks/readingsMock"
@@ -211,6 +212,8 @@ export default function DashboardPage() {
             Todos os indicadores estão ocultos. Selecione ao menos um para exibi-lo no dashboard.
           </p>
         )}
+
+        <ChartsContainer readings={readings} />
 
         <div>
           <button
