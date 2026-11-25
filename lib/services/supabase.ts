@@ -10,9 +10,7 @@ let initializationError: Error | null = null
 let client: SupabaseClient | null = null
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  initializationError = new Error(
-    "Supabase não configurado. Verifique NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no .env.local."
-  )
+  initializationError = new Error("Supabase não configurado. Verifique NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no .env.local.")
 } else {
   try {
     client = createClient(supabaseUrl, supabaseAnonKey)
@@ -24,7 +22,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Mantém a exportação para compatibilidade com eventuais usos no projeto.
 export const supabase = client
 
 function requireSupabase(): SupabaseClient {
@@ -56,10 +53,10 @@ function localStartOfDay(date: string): Date {
  * Uma consulta vazia retorna []; uma consulta com falha LANÇA um erro.
  */
 export async function fetchReadings(
-  limit = 50,
+  limit?: number,
   filters: ReadingFilters = {}
 ): Promise<SensorReading[]> {
-  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1000) {
+  if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1 || limit > 50000)) {
     throw new Error("Limite de consulta inválido.")
   }
 
@@ -86,9 +83,13 @@ export async function fetchReadings(
     query = query.gt("co2", CRITICAL_CO2_PPM)
   }
 
+  query = query.order("measured_at", { ascending: false })
+
+  if (limit !== undefined) {
+    query = query.limit(limit)
+  }
+
   const { data, error } = await query
-    .order("measured_at", { ascending: false })
-    .limit(limit)
 
   if (error) {
     throw new Error(`Falha ao consultar medições no Supabase: ${error.message}`)
@@ -105,23 +106,24 @@ export async function fetchReadings(
 }
 
 /**
- * Lista dispositivos cadastrados separadamente do limite de 100 medições.
- * Requer permissão de SELECT para a chave publicável em sensor_device (RLS).
- * Se não houver permissão, quem chama deve oferecer uma alternativa local.
+ * Lista dispositivos cadastrados.
  */
-export async function fetchDeviceIds(): Promise<string[]> {
+export async function fetchDevices(): Promise<string[]> {
   const { data, error } = await requireSupabase()
-    .from("sensor_device")
-    .select("device_id")
-    .order("device_id", { ascending: true })
+    .from("devices")
+    .select("id")
+    .order("id", { ascending: true })
 
   if (error) {
     throw new Error(`Falha ao consultar dispositivos: ${error.message}`)
   }
 
   return Array.from(new Set(
-    (data ?? []).map(item => item.device_id).filter(
+    (data ?? []).map(item => item.id).filter(
       (id): id is string => typeof id === "string" && id.trim().length > 0
     )
   ))
 }
+
+// Mantém compatibilidade com HistoryTab e testes existentes
+export const fetchDeviceIds = fetchDevices

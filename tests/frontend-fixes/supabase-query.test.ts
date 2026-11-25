@@ -55,6 +55,14 @@ describe("consulta Supabase filtrada antes do limite", () => {
     expect(mocks.query.limit).toHaveBeenCalledWith(100)
   })
 
+  it("não aplica limit quando limit é undefined", async () => {
+    const result = await fetchReadings(undefined, {
+      deviceId: "ESP32-SALA-01",
+    })
+    expect(result).toEqual([])
+    expect(mocks.query.limit).not.toHaveBeenCalled()
+  })
+
   it("diferencia uma consulta vazia de um erro do banco", async () => {
     expect(await fetchReadings(100)).toEqual([])
     mocks.query.limit.mockResolvedValueOnce({ data: null, error: { message: "permission denied" } })

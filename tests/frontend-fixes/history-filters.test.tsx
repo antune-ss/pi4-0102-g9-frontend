@@ -29,18 +29,18 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("Histórico com consulta filtrada no banco", () => {
-  it("reconsulta o Supabase com datas e mantém o limite de 100", async () => {
+  it("reconsulta o Supabase com datas sem limite fixo e inicia com intervalo padrão", async () => {
     render(<HistoryTab />)
     expect(await screen.findByText("ESP32-SALA-01")).toBeDefined()
-    expect(fetchReadings).toHaveBeenCalledWith(100, {
-      deviceId: "all", startDate: "", endDate: "", onlyCritical: false,
+    expect(fetchReadings).toHaveBeenCalledWith(undefined, {
+      deviceId: "all", startDate: expect.any(String), endDate: expect.any(String), onlyCritical: false,
     })
 
     fireEvent.change(screen.getByLabelText("Data de"), {
       target: { value: "2026-11-15" },
     })
-    await waitFor(() => expect(fetchReadings).toHaveBeenCalledWith(100, {
-      deviceId: "all", startDate: "2026-11-15", endDate: "", onlyCritical: false,
+    await waitFor(() => expect(fetchReadings).toHaveBeenCalledWith(undefined, {
+      deviceId: "all", startDate: "2026-11-15", endDate: expect.any(String), onlyCritical: false,
     }))
   })
 

@@ -10,17 +10,33 @@ import { HistoryFilters } from "@/components/history/HistoryFilters"
 import { HistoryTable } from "@/components/history/HistoryTable"
 import { AirPieChart } from "@/components/history/AirPieChart"
 
-const MAX_READINGS = 100
-
 interface QueryState {
   key: string
   readings: SensorReading[]
   error: string | null
 }
 
+function formatDateInput(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function getDefaultHistoryDates(): { start: string; end: string } {
+  const end = new Date()
+  const start = new Date()
+  start.setDate(end.getDate() - 7)
+  return {
+    start: formatDateInput(start),
+    end: formatDateInput(end),
+  }
+}
+
 export function HistoryTab() {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [isReady, setIsReady] = useState(false)
   const [selectedDevice, setSelectedDevice] = useState("all")
   const [onlyCritical, setOnlyCritical] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -30,6 +46,14 @@ export function HistoryTab() {
     readings: [],
     error: null,
   })
+
+  // Define como padrão a última semana inteira no cliente
+  useEffect(() => {
+    const { start, end } = getDefaultHistoryDates()
+    setStartDate(start)
+    setEndDate(end)
+    setIsReady(true)
+  }, [])
 
   // A chave muda quando filtros/retry mudam. Assim não mostramos a consulta
   // antiga como se já fosse o resultado dos novos filtros.
@@ -57,11 +81,12 @@ export function HistoryTab() {
   }, [])
 
   useEffect(() => {
+    if (!isReady) return
     let active = true
 
     async function loadData() {
       try {
-        const data = await fetchReadings(MAX_READINGS, {
+        const data = await fetchReadings(undefined, {
           deviceId: selectedDevice,
           startDate,
           endDate,
@@ -77,7 +102,7 @@ export function HistoryTab() {
     void loadData()
     // Desconsidera respostas de filtros anteriores (evita condições de corrida).
     return () => { active = false }
-  }, [queryKey, startDate, endDate, selectedDevice, onlyCritical])
+  }, [isReady, queryKey, startDate, endDate, selectedDevice, onlyCritical])
 
   const availableDevices = useMemo(() => {
     const ids = new Set([
@@ -114,7 +139,7 @@ export function HistoryTab() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Histórico de Medições</h2>
         <p className="text-sm text-muted-foreground">
-          Consulte por período e dispositivo. Os resultados são limitados às 100 medições mais recentes que atendem aos filtros.
+          Consulte todas as medições por período e dispositivo para auditoria e análise ambiental.
         </p>
       </div>
 
@@ -134,7 +159,7 @@ export function HistoryTab() {
       {error && (
         <div role="status" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">
           <p className="font-semibold">Não foi possível carregar as medições do Supabase.</p>
-          <p className="mt-1 break-words">{error}</p>
+          <p className="mt-1 wrap-break-words">{error}</p>
           <button
             type="button"
             onClick={() => setRetryCount(value => value + 1)}

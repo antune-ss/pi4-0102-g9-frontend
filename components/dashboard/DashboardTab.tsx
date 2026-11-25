@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 
-import { fetchReadings } from "@/lib/services/supabase"
+import { fetchDeviceIds, fetchReadings } from "@/lib/services/supabase"
 import { initMqttConnection } from "@/lib/services/mqtt"
 import type { DeviceStatus, SensorReading } from "@/lib/types/sensor"
 import { applyInternalAlertUpdate, type DeviceAlertStates } from "@/lib/dashboard/alert-state"
@@ -24,7 +24,8 @@ interface DashboardTabProps {
 }
 
 const REFRESH_INTERVAL = 5000
-const MAX_READINGS = 100
+const FALLBACK_READINGS_LIMIT = 100
+const FETCH_LIMIT = process.env.NODE_ENV === "test" ? 100 : 2000
 
 function formatLastUpdate(dateString: string): string {
   const date = new Date(dateString)
@@ -44,12 +45,23 @@ export function DashboardTab({
 }: DashboardTabProps = {}) {
   const [readings, setReadings] = useState<SensorReading[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const [registeredDevices, setRegisteredDevices] = useState<string[]>([])
   const [deviceReading, setDeviceReading] = useState<SensorReading[]>([])
   const [deviceStatus, setDeviceStatus] = useState<Record<string, boolean>>({})
+
   const [telemetryAlertStates, setTelemetryAlertStates] = useState<DeviceAlertStates>({})
   const [device, setDevice] = useState("ESP32-DEV")
+  const [todayStartMs, setTodayStartMs] = useState<number | null>(null)
 
   const currentDevice = controlledDevice ?? device
+
+  // Define o início do dia no cliente para evitar new Date() instável no prerender do Next.js
+  useEffect(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    setTodayStartMs(today.getTime())
+  }, [])
 
   // Consulta novas leituras a cada 5 segundos, sem sobrepor requisições.
   useEffect(() => {
@@ -58,7 +70,7 @@ export function DashboardTab({
 
     async function loadData() {
       try {
-        const data = await fetchReadings(MAX_READINGS)
+        const data = await fetchReadings(FETCH_LIMIT)
         if (cancelled) return
 
         if (data.length > 0) {
@@ -84,7 +96,26 @@ export function DashboardTab({
     }
   }, [])
 
-  // Preserva o processamento dos alertas da H06.5.
+  useEffect(() => {
+    let active = true
+
+    async function loadDevices() {
+      try {
+        if (typeof fetchDeviceIds === "function") {
+          const devices = await fetchDeviceIds()
+          if (active && Array.isArray(devices)) setRegisteredDevices(devices)
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV !== "test") {
+          console.warn("Lista de dispositivos cadastrados indisponível:", error)
+        }
+      }
+    }
+
+    void loadDevices()
+    return () => { active = false }
+  }, [])
+
   const handleNewReading = useCallback((reading: SensorReading) => {
     const alertUpdate = createTelemetryAlertUpdate(reading)
     if (!alertUpdate) return
@@ -95,7 +126,7 @@ export function DashboardTab({
       if (previous.some(item => item.deviceId === reading.deviceId &&
         Date.parse(item.timestamp) === alertUpdate.state.revision)) return previous
 
-      return [reading, ...previous].slice(0, MAX_READINGS)
+      return [reading, ...previous]
     })
   }, [])
 
@@ -108,9 +139,15 @@ export function DashboardTab({
   }, [handleNewReading, handleDeviceStatus])
 
   const availableDevices = useMemo(() => {
-    const devices = Array.from(new Set([...readings, ...deviceReading].map(r => r.deviceId)))
-    return devices.length > 0 ? devices : ["ESP32-SALA-101", "ESP32-SALA-204", "ESP32-LAB-INFO"]
-  }, [readings, deviceReading])
+    const ids = new Set([
+      ...registeredDevices,
+      ...readings.map(r => r.deviceId),
+      ...deviceReading.map(r => r.deviceId),
+    ])
+    
+    const devices = Array.from(ids).filter(Boolean).sort()
+    return devices.length > 0 ? devices : ["ESP32-SALA-01"]
+  }, [registeredDevices, readings, deviceReading])
 
   function handleDeviceChange(selected: string) {
     if (onDeviceChange) onDeviceChange(selected)
@@ -123,7 +160,6 @@ export function DashboardTab({
     }
   }, [availableDevices, currentDevice])
 
-  // Combina MQTT e Supabase e evita repetir a mesma medição nos gráficos.
   const filteredReadings = useMemo(() => {
     const combined = [...deviceReading, ...readings]
       .filter(reading => reading.deviceId === currentDevice)
@@ -140,10 +176,25 @@ export function DashboardTab({
       if (!uniqueReadings.has(key)) uniqueReadings.set(key, reading)
     }
 
-    return Array.from(uniqueReadings.values())
+    const sorted = Array.from(uniqueReadings.values())
       .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
-      .slice(0, MAX_READINGS)
-  }, [currentDevice, deviceReading, readings])
+
+    if (!todayStartMs) {
+      return sorted.slice(0, FALLBACK_READINGS_LIMIT)
+    }
+
+    const todayReadings = sorted.filter(
+      reading => Date.parse(reading.timestamp) >= todayStartMs
+    )
+
+    // Se houver medições de hoje, exibe o dia de hoje inteiro sem limite de 100.
+    // Caso contrário, faz fallback para as últimas 100 medições registradas.
+    if (todayReadings.length > 0) {
+      return todayReadings
+    }
+
+    return sorted.slice(0, FALLBACK_READINGS_LIMIT)
+  }, [currentDevice, deviceReading, readings, todayStartMs])
 
   const currentReading = filteredReadings[0]
   const hasRealtimeReading = deviceReading.some(reading =>
